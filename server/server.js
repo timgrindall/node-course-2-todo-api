@@ -3,11 +3,12 @@ require('./config/config');
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
+var ObjectId = require('mongoose').Types.ObjectId;
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
-var ObjectId = require('mongoose').Types.ObjectId;
+var {authenticate} = require('./middleware/authenticate');
 
 var app = express();
 const port = process.env.PORT;
@@ -124,24 +125,15 @@ app.post('/users', (req, res) => {
 	}).then((token) => {
 		res.header('x-auth', token).send(user);
 	}).catch((e) => {
-		console.log('something happened (400)!');
-		console.log(e);
+		// console.log('something happened (400)!');
+		// console.log(e);
 		res.status(400).send(e);
 	});
 });
 
-// GET /users
-app.get('/users', (req, res) => {
-	User.find().then((users) => res.send({users}), (e) => res.status(400).send(e));
-})
-
-// app.get('/todos', (req, res) => {
-// 	Todo.find().then((todos) => {
-// 		res.send({todos});
-// 	}, (e) => {
-// 		res.status(400).send(e);
-// 	})
-// });
+app.get('/users/me', authenticate, (req, res) => {
+	res.send(req.user);
+});
 
 app.listen(port, () => {
 	console.log(`Started up at port ${port}`);
