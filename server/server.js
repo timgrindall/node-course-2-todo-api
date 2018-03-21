@@ -100,7 +100,7 @@ app.patch('/todos/:id', (req, res) => {
 	if (_.isBoolean(body.completed) && body.completed) {
 		body.completedAt = new Date().getTime();
 	} else {
-		body.completed = false;
+		body.completed = false;	var user = new User(body);
 		body.completedAt = null;
 	}
 
@@ -133,6 +133,19 @@ app.post('/users', (req, res) => {
 
 app.get('/users/me', authenticate, (req, res) => {
 	res.send(req.user);
+});
+
+//POST /users/login {email, password}
+app.post('/users/login', (req, res) => {
+	var body = _.pick(req.body, ['email', 'password']);
+
+	User.findByCredentials(body.email, body.password).then((user) => {
+		return user.generateAuthToken().then((token) => {
+			res.header('x-auth', token).send(user);
+		});
+	}).catch((e) => {
+		res.status(400).send();
+	});
 });
 
 app.listen(port, () => {
